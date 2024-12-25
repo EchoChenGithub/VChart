@@ -5,10 +5,16 @@ import { ComponentTypeEnum } from '../interface/type';
 import type { AxisCurrentValueMap, IPolarCrosshairInfo, IPolarCrosshairSpec } from './interface';
 import { isDiscrete } from '@visactor/vscale';
 import { Tag } from '@visactor/vrender-components';
-import { LineCrosshair, SectorCrosshair, CircleCrosshair, PolygonCrosshair } from '@visactor/vrender-components';
+import {
+  LineCrosshair,
+  SectorCrosshair,
+  CircleCrosshair,
+  PolygonCrosshair,
+  PolygonSectorCrosshair
+} from '@visactor/vrender-components';
 import type { IPolarAxis } from '../axis/polar/interface';
 import type { IPoint, StringOrNumber, TooltipActiveType, TooltipData } from '../../typings';
-import type { IAxisInfo, IHair, IHairRadius } from './base';
+import type { IAxisInfo, IHair, IPolarHair } from './base';
 import { BaseCrossHair } from './base';
 import type { Maybe } from '@visactor/vutils';
 import { polarToCartesian, PointService, isArray, isNil } from '@visactor/vutils';
@@ -32,8 +38,8 @@ export class PolarCrossHair<T extends IPolarCrosshairSpec = IPolarCrosshairSpec>
   private _currValueAngle: AxisCurrentValueMap;
   private _currValueRadius: AxisCurrentValueMap;
 
-  private _angleHair: IHair | undefined;
-  private _radiusHair: IHairRadius | undefined;
+  private _angleHair: IPolarHair | undefined;
+  private _radiusHair: IPolarHair | undefined;
 
   private _cacheAngleCrossHairInfo: IPolarCrosshairInfo | undefined;
   private _cacheRadiusCrossHairInfo: IPolarCrosshairInfo | undefined;
@@ -267,9 +273,11 @@ export class PolarCrossHair<T extends IPolarCrosshairSpec = IPolarCrosshairSpec>
     }
 
     const container = this.getContainer();
-    const { angle, radius, label, center, visible } = crosshairInfo;
+    const { angle, radius, label, center, visible, axis } = crosshairInfo;
     if (visible) {
-      const crosshairType = this._angleHair.type === 'rect' ? 'sector' : 'line';
+      const isSmooth = this._angleHair.smooth === true;
+      const crosshairType = this._angleHair.type === 'rect' ? (isSmooth ? 'sector' : 'polygon-sector') : 'line';
+
       const positionAttrs = layoutAngleCrosshair(this._angleHair, crosshairInfo);
 
       if (this._angleCrosshair) {
@@ -294,6 +302,20 @@ export class PolarCrossHair<T extends IPolarCrosshairSpec = IPolarCrosshairSpec>
               endAngle: number;
             }),
             sectorStyle: this._angleHair.style,
+            zIndex: this.gridZIndex,
+            pickable: false
+          });
+        } else if (crosshairType === 'polygon-sector') {
+          crosshair = new PolygonSectorCrosshair({
+            ...(positionAttrs as {
+              center: IPoint;
+              innerRadius: number;
+              radius: number;
+              startAngle: number;
+              endAngle: number;
+            }),
+            offset: axis.getSpec()?.offset ?? 0.5,
+            polygonSectorStyle: this._angleHair.style,
             zIndex: this.gridZIndex,
             pickable: false
           });
@@ -389,6 +411,7 @@ export class PolarCrossHair<T extends IPolarCrosshairSpec = IPolarCrosshairSpec>
     const { categoryField, valueField } = this._spec as IPolarCrosshairSpec;
     if (categoryField && categoryField.visible) {
       this._angleHair = this._parseField(categoryField, 'categoryField');
+      this._angleHair.smooth = categoryField?.line?.smooth;
     }
     if (valueField && valueField.visible) {
       this._radiusHair = this._parseField(valueField, 'valueField');

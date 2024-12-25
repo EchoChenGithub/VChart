@@ -54,7 +54,7 @@ export interface IHair {
   };
 }
 
-export interface IHairRadius extends IHair {
+export interface IPolarHair extends IHair {
   smooth?: boolean;
 }
 

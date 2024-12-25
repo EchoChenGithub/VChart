@@ -126,6 +126,8 @@ export interface ICrosshairRectSpec {
    * @default '100%''
    */
   width?: number | string | ICrosshairRectWidthCallback;
+  /** 极坐标系下是否平滑 */
+  smooth?: boolean;
   style?: ICrosshairRectStyle;
 }
 

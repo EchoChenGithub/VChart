@@ -1,6 +1,6 @@
 import type { BandScale } from '@visactor/vscale';
 import type { IPolarSeries } from '../../../series';
-import type { IHair, IHairRadius } from '../base';
+import type { IHair, IPolarHair } from '../base';
 import type { AxisCurrentValueMap, IPolarCrosshairInfo } from '../interface';
 import { getAxisLabelOffset } from '../../axis/util';
 import { PointService, clamp, getAngleByPoint, getIntersectPoint, isValid, polarToCartesian } from '@visactor/vutils';
@@ -63,6 +63,7 @@ export const layoutByValue = (
 
       angleCrossHairInfo.startAngle = angle - bandWidth / 2;
       angleCrossHairInfo.endAngle = angle + bandWidth / 2;
+      angleCrossHairInfo.axis = axis as IPolarAxis;
     });
   }
 
@@ -152,7 +153,7 @@ export const layoutAngleCrosshair = (angleHair: IHair, crosshairInfo: IPolarCros
   return positionAttrs;
 };
 
-export const layoutRadiusCrosshair = (radiusHair: IHairRadius, crosshairInfo: IPolarCrosshairInfo) => {
+export const layoutRadiusCrosshair = (radiusHair: IPolarHair, crosshairInfo: IPolarCrosshairInfo) => {
   const { center, startAngle, endAngle, distance, sides, axis, point, radius, innerRadius } = crosshairInfo;
 
   const crosshairType = radiusHair.smooth ? 'circle' : 'polygon';
